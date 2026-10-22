@@ -57,7 +57,6 @@ for name, coef in ranked[:5]:
 print()
 
 # ── 5. Per-category breakdown of the global model ────────────
-# Professor asked: how does the global model perform on each category?
 print("--- Global Model: Per-Category Performance ---")
 for cat in ["Furniture", "Office Supplies", "Technology"]:
     # Find which validation rows belong to this category
