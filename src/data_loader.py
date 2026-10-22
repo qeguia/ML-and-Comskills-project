@@ -24,8 +24,7 @@ def load_and_prepare(filepath=None):
 
     df = pd.read_csv(filepath, encoding="latin-1")
 
-    # Drop discounts above 50% (professor's suggestion:
-    # they are 100% unprofitable, trivially predicted)
+    # Drop discounts above 50%
     df = df[df["Discount"] <= 0.5].copy()
 
     # Target: 1 = unprofitable, 0 = profitable
@@ -59,11 +58,9 @@ def get_features(df, include_category=True):
     numeric_cols = ["Quantity", "Discount", "Shipping_Days"]
 
     if include_category:
-        cat_cols = ["Category", "Sub-Category", "Segment",
-                    "Ship Mode", "Region"]
+        cat_cols = ["Category", "Sub-Category", "Segment", "Ship Mode", "Region"]
     else:
-        cat_cols = ["Sub-Category", "Segment",
-                    "Ship Mode", "Region"]
+        cat_cols = ["Sub-Category", "Segment", "Ship Mode", "Region"]
 
     # One-hot encode categoricals; drop_first avoids collinearity
     X = pd.get_dummies(
@@ -76,10 +73,12 @@ def get_features(df, include_category=True):
     return X, y
 
 
-def split_data(X, y):
+def split_data(X, y, df=None):
     """
     Stratified split: 60% train, 20% validation, 20% test.
     Stratified means each split keeps the same unprofitable rate.
+    
+    If df is provided, also return category labels aligned with splits.
     """
 
     X_train, X_temp, y_train, y_temp = train_test_split(
@@ -88,6 +87,12 @@ def split_data(X, y):
     X_val, X_test, y_val, y_test = train_test_split(
         X_temp, y_temp, test_size=0.5, random_state=RANDOM_STATE, stratify=y_temp
     )
+
+    if df is not None:
+        cat_train = df.loc[X_train.index, "Category"].values
+        cat_val = df.loc[X_val.index, "Category"].values
+        cat_test = df.loc[X_test.index, "Category"].values
+        return X_train, X_val, X_test, y_train, y_val, y_test, cat_train, cat_val, cat_test
 
     return X_train, X_val, X_test, y_train, y_val, y_test
 
