@@ -1,0 +1,11 @@
+name: ml-project
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pandas
+  - scikit-learn
+  - matplotlib
+  - shap
+  - pip
