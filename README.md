@@ -139,7 +139,7 @@ This motivates the per-category modeling approach.
 | **Office Supplies** | Sub-Category: Storage | β = 3.52 |
 | **Technology** | Discount | β = 3.11 |
 
-Insight: Office Supplies losses are driven more by *which items* are sold than by discount depth.
+Office Supplies losses are driven more by which items are sold than by discount depth.
 
 ### Model Comparison Results
 
@@ -157,7 +157,7 @@ Tree-based models offer marginal improvement, but logistic regression is competi
 ## Project Structure
 
 ```
-drip-superstore/
+ML-and-Comskills-project/
 │
 ├── data.csv
 │
@@ -202,25 +202,6 @@ drip-superstore/
 - **F1 (unprofitable class):** Primary metric (handles class imbalance)
 - **AUC-ROC:** Threshold-independent performance
 - **Accuracy:** Reported but not prioritized (81.3% majority baseline)
-
----
-
-## Key Decisions & Issues Encountered
-
-### Issue 1: Global model fails on Office Supplies
-The single logistic regression achieves F1 = 0.705 overall, but only F1 = 0.316 for Office Supplies transactions. This category has only 4% unprofitable rate after filtering, so the model essentially gives up on it.
-
-**Solution:** Train separate models per category (professor's feedback). The Office Supplies-only model improves to F1 = 0.400 and reveals that sub-categories (Storage, Supplies) are the key drivers, not discount.
-
-### Issue 2: Discount band >50% is trivially unprofitable
-100% of transactions with discounts >50% are unprofitable across all categories. Including this in the training set inflates model performance artificially.
-
-**Solution:** Remove these transactions from the dataset. Models now learn the *ambiguous* boundary where discounts start to hurt profitability.
-
-### Issue 3: Temporal vs random split
-The proposal used random splitting, but retail data may have temporal trends (seasonal effects, pricing policy changes).
-
-**Solution:** Implement temporal validation: train on 2014–2016, test on 2017. Results confirm model robustness (F1 degrades by <2%).
 
 ---
 
