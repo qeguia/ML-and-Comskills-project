@@ -8,7 +8,7 @@
 import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 
 RANDOM_STATE = 42
 
@@ -24,8 +24,9 @@ def load_and_prepare(filepath=None):
 
     df = pd.read_csv(filepath, encoding="latin-1")
 
-    # Drop discounts above 50%
+    # Drop discounts above 50% 
     df = df[df["Discount"] <= 0.5].copy()
+    df = df.reset_index(drop=True)
 
     # Target: 1 = unprofitable, 0 = profitable
     df["Unprofitable"] = (df["Profit"] < 0).astype(int)
@@ -72,6 +73,37 @@ def get_features(df, include_category=True):
 
     return X, y
 
+def get_features_ordinal(df, include_category=True):
+    """
+    Build the feature matrix X using ORDINAL encoding for categoricals.
+    Used for Random Forest — trees don't need one-hot encoding,
+    and ordinal keeps the data less sparse (professor's feedback).
+
+    Returns X as a DataFrame, y as an array, and the encoder.
+    """
+
+    numeric_cols = ["Quantity", "Discount", "Shipping_Days"]
+
+    if include_category:
+        cat_cols = ["Category", "Sub-Category", "Segment",
+                    "Ship Mode", "Region"]
+    else:
+        cat_cols = ["Sub-Category", "Segment",
+                    "Ship Mode", "Region"]
+
+    encoder = OrdinalEncoder(handle_unknown="use_encoded_value",
+                             unknown_value=-1)
+
+    # Encode categoricals as integers (0, 1, 2, ...)
+    cat_encoded = encoder.fit_transform(df[cat_cols])
+    cat_df = pd.DataFrame(cat_encoded, columns=cat_cols, index=df.index)
+
+    X = pd.concat([df[numeric_cols].reset_index(drop=True),
+                    cat_df.reset_index(drop=True)], axis=1)
+    y = df["Unprofitable"].values
+
+    return X, y, encoder
+
 
 def split_data(X, y, df=None):
     """
@@ -100,7 +132,7 @@ def split_data(X, y, df=None):
 def scale_features(X_train, X_val, X_test=None):
     """
     Standardize to zero mean & unit variance.
-    Important: fit ONLY on train, then apply to val/test.
+    Fit ONLY on train, then apply to val/test.
     """
     scaler = StandardScaler()
     X_train_s = scaler.fit_transform(X_train)
