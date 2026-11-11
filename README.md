@@ -14,7 +14,7 @@ The project integrates:
 - Feature importance analysis using SHAP values
 - Temporal validation (train on 2014–2016, test on 2017)
 
-**Main findings:** Different product categories lose money for different reasons. Furniture is driven by discount depth, Office Supplies by specific sub-categories (Storage, Supplies), and Technology shows profitability in certain sub-categories (Copiers, Machines). A one-size-fits-all discount policy is suboptimal.
+**Main findings:** Discount is the main risk factor, but its effect varies by category. Furniture losses are driven by discount depth (Tables and Bookcases are worst). Office Supplies losses are driven by which product is sold (Storage, Supplies). Technology is relatively resilient, Copiers and Machines stay profitable even at moderate discounts. A single discount policy is suboptimal; category-specific thresholds reduce losses
 
 ---
 
@@ -24,7 +24,7 @@ The project integrates:
 
 ```bash
 git clone https://github.com/qeguia/ML-and-Comskills-project.git
-cd drip-superstore
+cd ML-and-Comskills-project
 ```
 
 ### 2. Create the environment using the .yml file
@@ -51,106 +51,33 @@ cd src
 
 From there, run the analysis scripts in sequence:
 
-### 1. Exploratory Data Analysis
-Generate descriptive statistics and the discount × category figure:
-
 ```bash
-python 01_eda.py
+python 01_eda.py                 # Explore the data
+python 02_global_model.py        # Logistic regression baseline
+python 03_category_models.py     # Separate LR per category
+python 04_model_comparison.py    # LR vs Random Forest vs Gradient Boosting
+python 05_feature_importance.py  # SHAP analysis
+python 06_temporal_split.py      # Train on 2014-16, test on 2017
+python 07_rf_per_category.py     # 3 Random Forests (professor's feedback)
+python 08_discount_thresholds.py # Category-specific discount limits
+python 09_error_analysis.py      # False positive/negative analysis
+python 10_final_evaluation.py    # Final test set evaluation (run ONCE)
 ```
 
-**Output:**  
-- Console: unprofitable rate by category, discount-level statistics  
-- Figure: `figures/discount_by_category.png`
+What each script does:
 
-### 2. Global Logistic Regression Model
-Train a single model on all data:
-
-```bash
-python 02_global_model.py
-```
-
-**Output:**  
-- Validation F1 (unprofitable class)
-- AUC-ROC
-- Top 5 predictive features
-- Per-category breakdown (reveals Office Supplies weakness)
-
-### 3. Per-Category Models
-Train separate logistic regression models for Furniture, Office Supplies, and Technology:
-
-```bash
-python 03_category_models.py
-```
-
-**Output:**  
-- Three separate models with category-specific coefficients
-- Shows that Furniture is discount-driven, Office Supplies is sub-category-driven
-
-### 4. Model Comparison (LR vs RF vs GBT)
-Compare linear and tree-based methods:
-
-```bash
-python 04_model_comparison.py
-```
-
-**Output:**  
-- Side-by-side F1 and AUC comparison
-- Determines if nonlinear models improve performance
-
-### 5. Feature Importance (SHAP)
-Generate interpretability analysis:
-
-```bash
-python 05_feature_importance.py
-```
-
-**Output:**  
-- Figure: `figures/shap_summary.png` (3-panel plot showing per-category SHAP values)
-- Shows *why* each model flags transactions as unprofitable
-
-### 6. Temporal Split Robustness Check
-Test if models trained on 2014–2016 generalize to 2017:
-
-```bash
-python 06_temporal_split.py
-```
-
-**Output:**  
-- Temporal validation F1 and AUC
-- Confirms model robustness over time
-
-
----
-## Output Example
-
-### Discount × Category Figure (EDA)
-
-Transactions with discounts >30% have dramatically different unprofitable rates by category:
-- **Furniture:** 80%+ unprofitable
-- **Office Supplies & Technology:** ~60% unprofitable
-
-This motivates the per-category modeling approach.
-
-### Per-Category Model Coefficients
-
-| Category | Top Loss Driver | Coefficient |
-|----------|----------------|-------------|
-| **Furniture** | Discount | β = 3.43 |
-| **Office Supplies** | Sub-Category: Storage | β = 3.52 |
-| **Technology** | Discount | β = 3.11 |
-
-Office Supplies losses are driven more by which items are sold than by discount depth.
-
-### Model Comparison Results
-
-| Model | F1 (global) | AUC-ROC |
-|-------|------------|---------|
-| Logistic Regression | 0.705 | 0.978 |
-| Random Forest | 0.730 | 0.985 |
-| Gradient Boosting | 0.745 | 0.988 |
-
-Tree-based models offer marginal improvement, but logistic regression is competitive and more interpretable.
-
+| Script | Purpose | Key Output |
+|--------|---------|------------|
+| `01_eda.py` | Summary stats, discount × category bar chart | `figures/eda_discount_by_category.png` |
+| `02_global_model.py` | Logistic regression on all data | F1 ≈ 0.705, AUC ≈ 0.978 |
+| `03_category_models.py` | 3 separate logistic regressions | Office Supplies F1 improves 0.316 → 0.400 |
+| `04_model_comparison.py` | LR vs RF vs GBT comparison | GBT best: F1 ≈ 0.745 |
+| `05_feature_importance.py` | SHAP per-transaction explanations | `figures/shap_per_category.png` |
+| `06_temporal_split.py` | Robustness: train past, test future | F1 drops only 0.016 |
+| `07_rf_per_category.py` | 3 Random Forests with ordinal encoding | `figures/rf_feature_importance_per_category.png` |
+| `08_discount_thresholds.py` | Find max safe discount per category | `figures/discount_thresholds.png` |
+| `09_error_analysis.py` | Analyze where the model fails | False positive/negative breakdown |
+| `10_final_evaluation.py` | Final evaluation on held-out test set | F1 with 95% confidence intervals |
 
 ---
 
@@ -158,25 +85,26 @@ Tree-based models offer marginal improvement, but logistic regression is competi
 
 ```
 ML-and-Comskills-project/
-│
 ├── data.csv
-│
-├── src/
-│   ├── data_loader.py
-│   ├── 01_eda.py
-│   ├── 02_global_model.py
-│   ├── 03_category_models.py
-│   ├── 04_model_comparison.py
-│   ├── 05_feature_importance.py
-│   └── 06_temporal_split.py
-│
-├── figures/
-│   ├── discount_by_category.png
-│   └── shap_summary.png
-│
 ├── environment.yml
 ├── README.md
-└── .gitignore
+├── figures/
+│   ├── eda_discount_by_category.png
+│   ├── shap_per_category.png
+│   ├── rf_feature_importance_per_category.png
+│   └── discount_thresholds.png
+└── src/
+    ├── data_loader.py
+    ├── 01_eda.py
+    ├── 02_global_model.py
+    ├── 03_category_models.py
+    ├── 04_model_comparison.py
+    ├── 05_feature_importance.py
+    ├── 06_temporal_split.py
+    ├── 07_rf_per_category.py
+    ├── 08_discount_thresholds.py
+    ├── 09_error_analysis.py
+    └── 10_final_evaluation.py
 ```
 
 
@@ -184,24 +112,28 @@ ML-and-Comskills-project/
 
 ## Methodology
 
-### Data Preprocessing
-1. **Filter invalid discounts:** Remove transactions with `Discount > 0.5` (100% unprofitable, no learning signal)
-2. **Feature engineering:**
-   - `Shipping_Days = Ship_Date - Order_Date`
-   - One-hot encode: `Category`, `Sub-Category`, `Segment`, `Ship_Mode`, `Region`
-3. **Target definition:** `Unprofitable = 1[Profit < 0]`
-4. **Train/Val/Test split:** 60% / 20% / 20%, stratified by target
+### Data Preparation
+- Transactions with discount > 50% removed (100% unprofitable, so no learning signal)
+- `Sales` excluded from features (data leakage, as it is computed simultaneously with Profit)
+- Binary target: `Unprofitable = 1 if Profit < 0`
+- Stratified split: 60% train / 20% validation / 20% test
+
+### Encoding
+- **One-hot encoding** for logistic regression (scripts 02–06)
+- **Ordinal encoding** for Random Forest (scripts 07–10), trees handle categorical splits natively, resulting in less sparse data
 
 ### Models
-- **Logistic Regression:** L2 regularization (`C=1.0`), scaled features
-- **Random Forest:** 100 trees, tuned via 5-fold CV
-- **Gradient Boosting:** 100 estimators, learning rate = 0.1, tuned via CV
-- **SHAP:** TreeExplainer for Random Forest, outputs feature importance per category
+| Model | Type | Why |
+|-------|------|-----|
+| Logistic Regression (L2) | Linear baseline | It has interpretable coefficients, and is fast |
+| Random Forest | Nonlinear ensemble | Handles interactions, built-in feature importance; 100 trees, tuned via 5-fold CV |
+| Gradient Boosting | Nonlinear ensemble | Best overall performance; 100 estimators, learning rate = 0.1, tuned via CV |
+| SHAP | Model explanation method | TreeExplainer for Random Forest, outputs feature importance per category |
 
 ### Evaluation Metrics
-- **F1 (unprofitable class):** Primary metric (handles class imbalance)
-- **AUC-ROC:** Threshold-independent performance
-- **Accuracy:** Reported but not prioritized (81.3% majority baseline)
+- **F1 (minority class)** — balances precision and recall for unprofitable transactions
+- **AUC-ROC** — measures separability across all thresholds
+- Accuracy is reported but not used for model selection (misleading with 81% majority class)
 
 ---
 
