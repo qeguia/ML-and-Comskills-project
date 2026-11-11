@@ -1,5 +1,5 @@
 # 08_discount_thresholds.py 
-# Uses the per-category Random Forest models to find the discount level where P(unprofitable) crosses 50% for each category.
+# Uses the per-category Random Forest models to find the discount level where P(unprofitable) crosses 50% for each category. Prints a recommendation as well.
 
 import os, sys
 import numpy as np
