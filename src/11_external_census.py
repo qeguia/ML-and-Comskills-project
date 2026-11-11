@@ -1,8 +1,8 @@
-"""Measure whether state-level Census indicators add predictive value."""
+# 11_external_census.py
+# Measure whether state-level Census indicators add predictive value.
 
 import os
 import sys
-
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score, roc_auc_score
 
