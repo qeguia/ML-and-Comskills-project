@@ -62,6 +62,18 @@ python 07_rf_per_category.py     # 3 Random Forests (professor's feedback)
 python 08_discount_thresholds.py # Category-specific discount limits
 python 09_error_analysis.py      # False positive/negative analysis
 python 10_final_evaluation.py    # Final test set evaluation (run ONCE)
+python 11_external_census.py     # Compare models with state-level Census features
+```
+
+`11_external_census.py` downloads state-level American Community Survey indicators
+(median household income, population, and unemployment rate), merges them using
+each transaction's state, and compares validation performance with and without
+the external features. It uses the public Census Reporter ACS endpoint by
+default; an official Census API key can optionally be supplied:
+
+```bash
+export CENSUS_API_KEY="your-census-api-key"
+python 11_external_census.py
 ```
 
 What each script does:
@@ -78,6 +90,7 @@ What each script does:
 | `08_discount_thresholds.py` | Find max safe discount per category | `figures/discount_thresholds.png` |
 | `09_error_analysis.py` | Analyze where the model fails | False positive/negative breakdown |
 | `10_final_evaluation.py` | Final evaluation on held-out test set | F1 with 95% confidence intervals |
+| `11_external_census.py` | Test state-level Census features | Comparison with and without external data |
 
 ---
 
@@ -104,7 +117,8 @@ ML-and-Comskills-project/
     ├── 07_rf_per_category.py
     ├── 08_discount_thresholds.py
     ├── 09_error_analysis.py
-    └── 10_final_evaluation.py
+    ├── 10_final_evaluation.py
+    └── 11_external_census.py
 ```
 
 
