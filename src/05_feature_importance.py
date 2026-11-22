@@ -5,7 +5,7 @@ import os
 import shap
 import matplotlib.pyplot as plt
 from sklearn.ensemble import GradientBoostingClassifier
-from data_loader import load_and_prepare, get_features, split_data, PROJECT_ROOT
+from data_loader import load_and_prepare, get_features, split_data, PROJECT_ROOT, apply_plot_style
 
 # ── 1. Load data ──────────────────────────────────────────────
 df = load_and_prepare()
@@ -16,7 +16,8 @@ print("=" * 50)
 print()
 
 # ── 2. SHAP per category ─────────────────────────────────────
-fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+apply_plot_style(16)
+fig, axes = plt.subplots(1, 3, figsize=(15, 6))
 
 for idx, cat in enumerate(["Furniture", "Office Supplies", "Technology"]):
 
@@ -50,10 +51,11 @@ for idx, cat in enumerate(["Furniture", "Office Supplies", "Technology"]):
     shap.summary_plot(shap_values, X_val, show=False,
                       max_display=8, plot_size=None)
     axes[idx].set_title(f"{cat}")
+    axes[idx].set_xlabel("SHAP value (impact on predicted risk of loss)")
 
 plt.tight_layout()
 fig_dir = os.path.join(PROJECT_ROOT, "figures")
 os.makedirs(fig_dir, exist_ok=True)
 fig_path = os.path.join(fig_dir, "shap_per_category.png")
-plt.savefig(fig_path, dpi=150, bbox_inches="tight")
+plt.savefig(fig_path, dpi=200, bbox_inches="tight")
 print(f"Figure saved to {fig_path}")
