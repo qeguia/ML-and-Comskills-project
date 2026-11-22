@@ -67,6 +67,11 @@ def main():
             f"Transaction + Census features: F1={census_f1:.3f}, "
             f"AUC-ROC={census_auc:.3f}"
         )
+        print(
+            f"Change from adding Census features: "
+            f"F1 {census_f1 - baseline_f1:+.3f}, "
+            f"AUC-ROC {census_auc - baseline_auc:+.3f}"
+        )
 
 
 if __name__ == "__main__":
