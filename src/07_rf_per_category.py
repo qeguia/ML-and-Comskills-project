@@ -79,22 +79,26 @@ for cat in categories:
     print(f"{cat:25s} {r['n']:4d} {r['unprof']/r['n']:7.1%} "
           f"{r['f1']:6.3f} {r['auc']:6.3f}")
 
-# ── 4. Feature importance figure (3 panels) ──────────────────
-fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+# ── 4. Feature importance figure ──────────────────
+from data_loader import apply_plot_style, CATEGORY_COLORS
+apply_plot_style(16)
+fig, axes = plt.subplots(1, 3, figsize=(14, 5.2))
 
 for i, cat in enumerate(categories):
     top5 = results[cat]["top5"]
-    names = [x[0] for x in top5]
+    names = [x[0].replace("_", " ") for x in top5]
     values = [x[1] for x in top5]
 
-    axes[i].barh(names[::-1], values[::-1], color=["#e74c3c", "#3498db", "#2ecc71"][i])
+    axes[i].barh(names[::-1], values[::-1], color=CATEGORY_COLORS[cat])
+    for yy, v in enumerate(values[::-1]):
+        axes[i].text(v + 0.01, yy, f"{v:.2f}", va="center", fontsize=13)
     axes[i].set_title(f"{cat}")
-    axes[i].set_xlabel("Importance")
+    axes[i].set_xlabel("Importance (share of total)")
+    axes[i].set_xlim(0, max(values) * 1.25)
 
-plt.suptitle("Random Forest Feature Importance per Category", fontsize=14)
 plt.tight_layout()
 fig_dir = os.path.join(PROJECT_ROOT, "figures")
 os.makedirs(fig_dir, exist_ok=True)
 fig_path = os.path.join(fig_dir, "rf_feature_importance_per_category.png")
-plt.savefig(fig_path, dpi=150)
+plt.savefig(fig_path, dpi=200)
 print(f"\nFigure saved in {fig_path}")
