@@ -41,7 +41,9 @@ for cat in categories:
 
 discount_levels = np.arange(0, 0.51, 0.05)
 
-fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+from data_loader import apply_plot_style, CATEGORY_COLORS
+apply_plot_style(16)
+fig, axes = plt.subplots(1, 3, figsize=(14, 5.4))
 
 for i, cat in enumerate(categories):
     # Get the training data for this category to compute medians
@@ -77,26 +79,42 @@ for i, cat in enumerate(categories):
     else:
         print(f"  P(unprofitable) stays below 50% up to 50% discount")
 
-    # Plot
-    axes[i].plot(discount_levels * 100, probs,
-                 marker="o", linewidth=2,
-                 color=["#e74c3c", "#3498db", "#2ecc71"][i])
-    axes[i].axhline(y=50, color="gray", linestyle="--", alpha=0.7,
-                    label="50% threshold")
+    # Plot: model prediction (line), observed rate in the data (hollow squares, only where n >= 20)
+    color = CATEGORY_COLORS[cat]
+    axes[i].plot(discount_levels * 100, probs, marker="o", linewidth=2.5,
+                 color=color)
+    obs = df[df["Category"] == cat].groupby("Discount")["Unprofitable"].agg(["mean", "count"])
+    obs = obs[obs["count"] >= 20]
+    axes[i].scatter(obs.index * 100, obs["mean"] * 100, marker="s", s=90,
+                    facecolors="none", edgecolors="black", linewidths=1.8, zorder=5)
+    max_d = df[df["Category"] == cat]["Discount"].max() * 100
+    if max_d < 50:
+        axes[i].axvspan(max_d, 50, color="gray", alpha=0.15)
+    axes[i].axhline(y=50, color="gray", linestyle="--", alpha=0.8)
     if threshold is not None:
-        axes[i].axvline(x=threshold * 100, color="red",
-                        linestyle=":", alpha=0.7)
+        axes[i].axvline(x=threshold * 100, color="red", linestyle=":", alpha=0.8)
+        axes[i].text(threshold * 100 + 1, 4, f"{int(threshold*100)}%", color="red", fontsize=14, fontweight="bold")
     axes[i].set_title(f"{cat}")
     axes[i].set_xlabel("Discount (%)")
-    axes[i].set_ylabel("P(Unprofitable) %")
-    axes[i].set_ylim(0, 100)
-    axes[i].legend()
+    axes[i].set_ylabel("Probability of loss (%)")
+    axes[i].set_ylim(0, 108)
+    axes[i].set_yticks([0, 20, 40, 60, 80, 100])
     axes[i].grid(True, alpha=0.3)
 
-plt.suptitle("Predicted Unprofitability by Discount Level", fontsize=14)
-plt.tight_layout()
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
+legend_items = [
+    Line2D([0], [0], color="black", marker="o", linewidth=2.5, label="Model prediction"),
+    Line2D([0], [0], marker="s", linestyle="", markerfacecolor="none", markeredgecolor="black",
+           markeredgewidth=1.8, markersize=11, label="Observed rate (levels with n \u2265 20)"),
+    Line2D([0], [0], color="gray", linestyle="--", label="50% risk"),
+    Line2D([0], [0], color="red", linestyle=":", label="Model crosses 50%"),
+    Patch(facecolor="gray", alpha=0.25, label="No transactions at this discount"),
+]
+fig.legend(handles=legend_items, loc="lower center", ncol=3, fontsize=13, frameon=False)
+plt.tight_layout(rect=[0, 0.14, 1, 0.97])
 fig_dir = os.path.join(PROJECT_ROOT, "figures")
 os.makedirs(fig_dir, exist_ok=True)
 fig_path = os.path.join(fig_dir, "discount_thresholds.png")
-plt.savefig(fig_path, dpi=150)
+plt.savefig(fig_path, dpi=200)
 print(f"\nFigure saved in {fig_path}")
