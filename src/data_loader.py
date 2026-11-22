@@ -1,8 +1,6 @@
 # data_loader.py
 # Loads the Superstore CSV, creates features, and splits into train / validation / test sets.
-
 # We exclude Sales: it is computed simultaneously with Profit (Profit = Sales - Cost), using it would be data leakage.
-
 # We filter Discount > 50%: those transactions are 100% unprofitable across all categories, so no model needed.
 
 import os
@@ -15,6 +13,18 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 
 RANDOM_STATE = 42
+
+# One colour per product category, used in every figure so that readers can follow a category across figures
+CATEGORY_COLORS = {"Furniture": "#e74c3c", "Office Supplies": "#3498db", "Technology": "#2ecc71"}
+
+def apply_plot_style(base=15):
+    """Large, readable fonts: figures are shrunk to page width in the report."""
+    import matplotlib.pyplot as plt
+    plt.rcParams.update({
+        "font.size": base, "axes.titlesize": base + 2, "axes.titleweight": "bold",
+        "axes.labelsize": base, "xtick.labelsize": base - 1, "ytick.labelsize": base - 1,
+        "legend.fontsize": base - 2, "figure.titlesize": base + 3, "axes.grid": False,
+    })
 
 # Project root = one folder above src/
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

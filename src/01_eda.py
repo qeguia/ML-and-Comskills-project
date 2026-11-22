@@ -70,27 +70,36 @@ for region in ["Central", "East", "South", "West"]:
 print()
 
 # ── 6. Save the EDA figure ───────────────────────────────────
+from data_loader import apply_plot_style, CATEGORY_COLORS
+apply_plot_style(15)
 fig, ax = plt.subplots(figsize=(10, 6))
+
+# Offsets (in points) for the sample-size labels so that they do not overlap at the 0% and (0%,15%] bins
+offsets = {"Furniture": (-26, 12), "Office Supplies": (0, -24), "Technology": (26, 12)}
 
 for cat in ["Furniture", "Office Supplies", "Technology"]:
     subset = df[df["Category"] == cat]
-    rates = subset.groupby("Discount_Bin")["Unprofitable"].mean() * 100
-    counts = subset.groupby("Discount_Bin")["Unprofitable"].count()
+    rates = subset.groupby("Discount_Bin", observed=False)["Unprofitable"].mean() * 100
+    counts = subset.groupby("Discount_Bin", observed=False)["Unprofitable"].count()
     ax.plot(rates.index, rates.values, marker="o", linewidth=2, label=cat)
 
     # Add sample sizes
-    for x, y_val, n in zip(rates.index, rates.values, counts.values):
-        ax.annotate(f"n={n}", (x, y_val), textcoords="offset points",
-                    xytext=(0, 10), ha="center", fontsize=8)
+    for x, y_val, n in zip(rates.index.astype(str), rates.values, counts.values):
+        ax.annotate(f"n={n:,}", (x, y_val), textcoords="offset points",
+                    xytext=offsets[cat], ha="center", fontsize=11,
+                    color=CATEGORY_COLORS[cat])
 
-ax.set_xlabel("Discount Level")
-ax.set_ylabel("Unprofitable Transactions (%)")
-ax.set_title("Unprofitable Rate by Discount Level and Category")
-ax.legend()
+ax.set_xlabel("Discount level (share of list price)")
+ax.set_ylabel("Unprofitable transactions (%)")
+ax.set_title("Loss rate by discount level and category")
+ax.margins(x=0.14)
+ax.tick_params(axis="x", labelsize=13)
+ax.set_ylim(-14, 112)
+ax.legend(loc="upper left")
 ax.grid(True, alpha=0.3)
 plt.tight_layout()
 fig_dir = os.path.join(PROJECT_ROOT, "figures")
 os.makedirs(fig_dir, exist_ok=True)
 fig_path = os.path.join(fig_dir, "eda_discount_by_category.png")
-plt.savefig(fig_path, dpi=150)
+plt.savefig(fig_path, dpi=200)
 print(f"Figure saved to {fig_path}")
